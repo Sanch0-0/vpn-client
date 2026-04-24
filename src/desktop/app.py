@@ -1,0 +1,42 @@
+import flet as ft
+from config.app_state import W, H
+from services.auth_service import try_auto_login
+from ui.auth_screen import build_login_screen, build_register_screen
+from ui.main_screen import build_main_screen
+from ui.server_location_screen import build_server_location_screen
+from config.app_state import app_state
+
+
+def navigate(page, route: str):
+    page.controls.clear()
+
+    if route != "login" and not app_state.is_authenticated:
+        route = "login"
+
+    if route == "login":
+        page.add(build_login_screen(page, navigate))
+    elif route == "main":
+        page.add(build_main_screen(page, navigate))
+    elif route == "register":
+        page.add(build_register_screen(page, navigate))
+    elif route == "servers":
+        page.add(build_server_location_screen(page, navigate))
+    elif route == "menu":
+        from ui.menu_screen import build_menu_screen
+
+        page.add(build_menu_screen(page, navigate))
+
+    page.update()
+
+
+def main_app(page: ft.Page):
+    page.title = "VPN Client"
+    page.window.width = W
+    page.window.height = H
+    page.window.frameless = True
+    page.scroll = ft.ScrollMode.AUTO
+
+    if try_auto_login():
+        navigate(page, "main")
+    else:
+        navigate(page, "login")
