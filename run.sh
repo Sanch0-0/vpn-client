@@ -17,4 +17,4 @@ fi
 
 echo "✅ All dependencies OK"
 
-sudo python src/desktop/main.py
+python src/desktop/main.py

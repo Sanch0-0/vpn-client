@@ -4,18 +4,15 @@ from config.config_builder import get_wg_config_path
 
 # ─── KEY GENERATION ───
 def generate_keys():
-    private_key = subprocess.run(
-        ["wg", "genkey"], capture_output=True, text=True
-    ).stdout.strip()
+    private_key = subprocess.run(["wg", "genkey"], capture_output=True).stdout.strip()
 
     public_key = subprocess.run(
         ["wg", "pubkey"],
         input=private_key,
         capture_output=True,
-        text=True,
     ).stdout.strip()
 
-    return private_key, public_key
+    return private_key.decode(), public_key.decode()
 
 
 # ─── BUILD CONFIG ───

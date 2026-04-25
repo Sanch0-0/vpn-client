@@ -26,6 +26,38 @@ def _icon_badge(icon_color: str, bg_color: str, icon: ft.Control) -> ft.Containe
     )
 
 
+def _loading_overlay() -> ft.Container:
+    """Full-screen loading overlay with spinner."""
+    return ft.Container(
+        left=0,
+        top=0,
+        width=W,
+        height=H,
+        bgcolor="#CC000000",
+        border_radius=24,
+        alignment=ft.Alignment.CENTER,
+        content=ft.Column(
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=16,
+            controls=[
+                ft.ProgressRing(
+                    width=48,
+                    height=48,
+                    stroke_width=4,
+                    color=ORANGE,
+                ),
+                ft.Text(
+                    "Connecting...",
+                    size=14,
+                    color=WHITE,
+                    weight=ft.FontWeight.W_500,
+                ),
+            ],
+        ),
+    )
+
+
 def _info_col(
     badge_icon_name: str,
     label: str,
@@ -103,8 +135,10 @@ def _info_card() -> ft.Container:
 
 
 def _connect_button(page: ft.Page, navigate) -> ft.Container:
-    """Main connect/disconnect button."""
+    """Main connect/disconnect button with real VPN logic."""
+
     connected = app_state.connected
+    disabled = not app_state.current_server
 
     outer_bg = ORANGE if connected else WHITE
     inner_stroke = ORANGE_RING if connected else DIVIDER
@@ -116,8 +150,27 @@ def _connect_button(page: ft.Page, navigate) -> ft.Container:
     )
 
     def on_click(e):
-        app_state.connected = not app_state.connected
-        navigate(e.page, "main")
+        from services.connections import connect, disconnect
+
+        async def flow():
+            app_state.is_loading = True
+            e.page.update()
+
+            if not app_state.connected:
+                ok, err = connect()
+            else:
+                ok, err = disconnect()
+
+            app_state.is_loading = False
+
+            if not ok:
+                from ui.auth_screen import show_error
+
+                show_error(e.page, str(err))
+
+            e.page.update()
+
+        e.page.run_task(flow)
 
     return ft.Container(
         left=124,
@@ -131,8 +184,9 @@ def _connect_button(page: ft.Page, navigate) -> ft.Container:
             color="#28000000",
             offset=ft.Offset(0, 4),
         ),
-        on_click=on_click,
-        ink=True,
+        on_click=None if disabled else on_click,
+        ink=not disabled,
+        opacity=0.5 if disabled else 1,
         alignment=ft.Alignment.CENTER,
         content=ft.Container(
             width=103,
@@ -281,7 +335,7 @@ def _title_texts() -> list[ft.Control]:
 
 
 # ─── Main screen ───
-def build_main_screen(page: ft.Page, navigate) -> ft.Stack:
+def build_main_screen(page: ft.Page, navigate) -> ft.Container:
     """Builds the main VPN screen."""
 
     def on_menu_click(e):
@@ -294,16 +348,14 @@ def build_main_screen(page: ft.Page, navigate) -> ft.Stack:
         navigate(e.page, "servers")
 
     controls: list[ft.Control] = [
-        ft.Container(
-            expand=True,
-            bgcolor=BG,
-            border_radius=24,
-        ),
+        ft.Container(expand=True, bgcolor=BG, border_radius=24),
         *_top_bar(on_menu_click, on_connections_click),
         _info_card(),
         *_title_texts(),
         _connect_button(page, navigate),
         _bottom_bar(go_to_servers),
+        # Loading overlay — always last (renders on top)
+        *([_loading_overlay()] if app_state.is_loading else []),
     ]
 
     return ft.Container(
