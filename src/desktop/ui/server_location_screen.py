@@ -120,7 +120,7 @@ def _server_item(server: dict, premium: bool, navigate) -> ft.Container:
 
     def select_server(e):
         if premium:
-            pass
+            return
 
         app_state.current_server = {
             "id": server["id"],
