@@ -10,7 +10,7 @@ from config.app_state import app_state
 def navigate(page, route: str):
     page.controls.clear()
 
-    if route != "login" and not app_state.is_authenticated:
+    if route not in ["login", "register"] and not app_state.is_authenticated:
         route = "login"
 
     if route == "login":

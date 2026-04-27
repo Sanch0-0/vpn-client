@@ -188,13 +188,13 @@ def build_login_screen(page: ft.Page, navigate):
         )
 
         if success:
-            navigate(page, "main")
+            navigate(e.page, "main")
         else:
             error_msg = parse_error(resp)
-            show_error(page, error_msg)
+            show_error(e.page, error_msg)
 
     def go_register(e):
-        navigate(page, "register")
+        navigate(e.page, "register")
 
     controls = [
         ft.Container(expand=True, bgcolor=BG, border_radius=24),
@@ -230,13 +230,13 @@ def build_register_screen(page: ft.Page, navigate):
         )
 
         if success:
-            navigate(page, "login")
+            navigate(e.page, "login")
         else:
             error_msg = parse_error(resp)
-            show_error(page, error_msg)
+            show_error(e.page, error_msg)
 
     def go_login(e):
-        navigate(page, "login")
+        navigate(e.page, "login")
 
     controls = [
         ft.Container(expand=True, bgcolor=BG, border_radius=24),

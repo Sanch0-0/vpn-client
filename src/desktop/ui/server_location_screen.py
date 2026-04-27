@@ -43,16 +43,27 @@ REGION_MAP = {
 
 
 # ─── UI Helpers ───
-def _header(top_pos: int) -> ft.Container:
+def _header(top_pos: int, navigate) -> ft.Container:
     return ft.Container(
         left=24,
         top=top_pos,
         width=327,
-        content=ft.Text(
-            "Choose server location",
-            size=20,
-            color=BLACK,
-            weight=ft.FontWeight.W_700,
+        height=40,
+        ink=True,
+        on_click=lambda e: navigate(e.page, "main"),
+        content=ft.Row(
+            alignment=ft.MainAxisAlignment.START,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=8,
+            controls=[
+                ft.Icon(ft.Icons.ARROW_BACK, size=20, color=BLACK),
+                ft.Text(
+                    "Choose server location",
+                    size=20,
+                    color=BLACK,
+                    weight=ft.FontWeight.W_700,
+                ),
+            ],
         ),
     )
 
@@ -120,7 +131,14 @@ def _server_item(server: dict, premium: bool, navigate) -> ft.Container:
 
     def select_server(e):
         if premium:
-            return
+            app_state.current_server = {
+                "id": server["id"],
+                "name": name,
+                "flag": flag,
+                "host": server["host"],
+                "region": server["region"],
+            }
+            navigate(e.page, "main")
 
         app_state.current_server = {
             "id": server["id"],
@@ -229,7 +247,7 @@ def build_server_location_screen(page: ft.Page, navigate) -> ft.Container:
                 width=W,
                 height=H,
                 controls=[
-                    _header(40),
+                    _header(40, navigate),
                     _search_bar(80),
                     _section_title("FREE LOCATIONS", 152),
                     ft.Container(
