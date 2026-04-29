@@ -20,6 +20,9 @@ def navigate(page, route: str):
     elif route == "register":
         page.add(build_register_screen(page, navigate))
     elif route == "servers":
+        from services.connections import load_servers
+
+        load_servers()
         page.add(build_server_location_screen(page, navigate))
     elif route == "menu":
         from ui.menu_screen import build_menu_screen
