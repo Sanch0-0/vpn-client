@@ -1,8 +1,11 @@
+import os
 from config.app_state import app_state
 from config.config_builder import (
     save_device,
     load_device,
     clear_device,
+    get_machine_id,
+    get_wg_config_path,
 )
 from services.wireguard import (
     build_wg_config,
@@ -36,23 +39,26 @@ def connect():
         return False, "No server selected"
 
     existing = load_device()
-    if existing:
+    wg_path = get_wg_config_path()
+
+    if existing and os.path.exists(wg_path):
         try:
-            start_wg(existing["config_path"])
+            start_wg(wg_path)
             app_state.connected = True
             return True, None
         except Exception as e:
+            print("Reuse failed, recreating:", e)
             clear_device()
-            print("Old device failed, recreating:", e)
 
     try:
-        # 1. keys
         private_key, public_key = generate_keys()
 
-        # 2. create device
+        machine_id = get_machine_id()
+        device_name = f"desktop-{machine_id}"
+
         resp = create_device(
             {
-                "name": "desktop",
+                "name": device_name,
                 "public_key": public_key,
                 "node_id": app_state.current_server["id"],
             }
@@ -64,14 +70,12 @@ def connect():
         device = resp.json()
         device_id = device["id"]
 
-        # 3. get config
         resp = get_device_config(device_id)
         if resp.status_code != 200:
             return False, resp.text
 
         cfg = resp.json()
 
-        # 4. build wg config
         config_str = build_wg_config(
             private_key,
             cfg["assigned_ip"],
@@ -80,15 +84,12 @@ def connect():
         )
 
         config_path = save_wg_config(config_str)
-
-        # 5. start wg
         start_wg(config_path)
 
-        # 6. save state
         save_device(
             {
                 "device_id": device_id,
-                "private_key": private_key,
+                "machine_id": machine_id,
                 "config_path": config_path,
             }
         )

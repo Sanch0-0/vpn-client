@@ -53,3 +53,22 @@ def clear_device():
 def get_wg_config_path():
     ensure_dir()
     return WG_CONFIG_FILE
+
+
+def get_machine_id() -> str:
+    """Stable hardware fingerprint — Linux machine-id."""
+    try:
+        with open("/etc/machine-id") as f:
+            return f.read().strip()[:20]
+    except Exception:
+        import uuid
+
+        id_file = os.path.join(BASE_DIR, "machine.id")
+        if os.path.exists(id_file):
+            with open(id_file) as f:
+                return f.read().strip()
+        ensure_dir()
+        machine_id = str(uuid.uuid4())[:20]
+        with open(id_file, "w") as f:
+            f.write(machine_id)
+        return machine_id

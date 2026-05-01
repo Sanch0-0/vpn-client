@@ -1,3 +1,4 @@
+import asyncio
 import flet as ft
 from config.app_state import app_state, W, H
 
@@ -154,23 +155,22 @@ def _connect_button(page: ft.Page, navigate) -> ft.Container:
 
         async def flow():
             app_state.is_loading = True
+            navigate(e.page, "main")
             e.page.update()
 
             if not app_state.connected:
-                ok, err = connect()
+                ok, err = await asyncio.to_thread(connect)
             else:
-                ok, err = disconnect()
+                ok, err = await asyncio.to_thread(disconnect)
 
             app_state.is_loading = False
+            navigate(e.page, "main")
+            e.page.update()
 
             if not ok:
                 from ui.auth_screen import show_error
 
                 show_error(e.page, str(err))
-
-            e.page.update()
-
-        e.page.run_task(flow)
 
     return ft.Container(
         left=124,
