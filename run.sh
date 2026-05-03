@@ -9,6 +9,18 @@ if ! command -v wg &> /dev/null; then
     exit 1
 fi
 
+if ! command -v nmcli &> /dev/null; then
+    echo "❌ NetworkManager is not installed"
+    echo "Install: ssudo pacman -S networkmanager"
+    exit 1
+fi
+
+if ! nmcli general status &> /dev/null; then
+    echo "❌ NetworkManager is not running"
+    echo "Start it: sudo systemctl enable --now NetworkManager"
+    exit 1
+fi
+
 # python
 if ! command -v python &> /dev/null; then
     echo "❌ Python is missing"

@@ -62,6 +62,16 @@ def create_device(data: dict):
     return request("POST", "/devices/create", json=data)
 
 
+def connect_device(device_id: str, public_key: str):
+    return request(
+        "POST", f"/devices/{device_id}/connect", json={"public_key": public_key}
+    )
+
+
+def disconnect_device(device_id: str):
+    return request("POST", f"/devices/{device_id}/disconnect")
+
+
 def get_device_config(device_id: str):
     return request("GET", f"/devices/{device_id}/config")
 

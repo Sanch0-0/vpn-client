@@ -15,10 +15,11 @@ from services.wireguard import (
     stop_wg,
 )
 from services.api_client import (
+    connect_device,
+    disconnect_device,
     get_servers,
     create_device,
     get_device_config,
-    revoke_device,
 )
 
 
@@ -41,85 +42,81 @@ def connect():
     existing = load_device()
     wg_path = get_wg_config_path()
 
+    private_key, public_key = generate_keys()
+
+    # Reuse existing device record if present
     if existing and os.path.exists(wg_path):
-        try:
-            start_wg(wg_path)
-            app_state.connected = True
-            return True, None
-        except Exception as e:
-            print("Reuse failed, recreating:", e)
-            clear_device()
-
-    try:
-        private_key, public_key = generate_keys()
-
+        device_id = existing["device_id"]
+    else:
+        # Create device record (no WireGuard yet)
         machine_id = get_machine_id()
-        device_name = f"desktop-{machine_id}"
-
         resp = create_device(
             {
-                "name": device_name,
+                "name": f"desktop-{machine_id}",
                 "public_key": public_key,
                 "node_id": app_state.current_server["id"],
             }
         )
-
         if resp.status_code != 200:
             return False, resp.text
+        device_id = resp.json()["id"]
 
-        device = resp.json()
-        device_id = device["id"]
+    # Get config
+    resp = get_device_config(device_id)
+    if resp.status_code != 200:
+        return False, resp.text
+    cfg = resp.json()
 
-        resp = get_device_config(device_id)
-        if resp.status_code != 200:
-            return False, resp.text
+    node_ip = cfg["endpoint"].split(":")[0]
 
-        cfg = resp.json()
+    # Build and save wg config
+    config_str = build_wg_config(
+        private_key, cfg["assigned_ip"], cfg["node_public_key"], cfg["endpoint"]
+    )
+    config_path = save_wg_config(config_str)
 
-        config_str = build_wg_config(
-            private_key,
-            cfg["assigned_ip"],
-            cfg["node_public_key"],
-            cfg["endpoint"],
-        )
+    # Save device locally before any network calls
+    save_device(
+        {
+            "device_id": device_id,
+            "config_path": config_path,
+            "node_ip": node_ip,
+        }
+    )
 
-        config_path = save_wg_config(config_str)
+    # Add peer to node
+    resp = connect_device(device_id, public_key)
+    if resp.status_code != 200:
+        return False, resp.text
+
+    # Start tunnel
+    try:
         start_wg(config_path)
-
-        save_device(
-            {
-                "device_id": device_id,
-                "machine_id": machine_id,
-                "config_path": config_path,
-            }
-        )
-
-        app_state.connected = True
-        return True, None
-
     except Exception as e:
-        return False, str(e)
+        disconnect_device(device_id)  # cleanup peer on node
+        return False, f"Tunnel failed: {str(e)}"
+
+    app_state.connected = True
+    return True, None
 
 
-# ─── DISCONNECT ───
 def disconnect():
     device = load_device()
     if not device:
         return False, "No active device"
 
-    try:
-        stop_wg(device["config_path"])
-    except Exception as e:
-        print("wg down failed:", e)
+    node_ip = device.get("node_ip")
 
     try:
-        revoke_device(device["device_id"])
+        stop_wg(device["config_path"], node_ip=node_ip)
     except Exception as e:
-        print("revoke failed:", e)
+        print(f"[disconnect] wg down: {e}")
+
+    try:
+        disconnect_device(device["device_id"])
+    except Exception as e:
+        print(f"[disconnect] server disconnect: {e}")
 
     clear_device()
-
     app_state.connected = False
-    app_state.current_server = None
-
     return True, None

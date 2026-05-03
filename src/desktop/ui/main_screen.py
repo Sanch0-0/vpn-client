@@ -49,7 +49,7 @@ def _loading_overlay() -> ft.Container:
                     color=ORANGE,
                 ),
                 ft.Text(
-                    "Connecting...",
+                    "Loading...",
                     size=14,
                     color=WHITE,
                     weight=ft.FontWeight.W_500,
@@ -149,28 +149,6 @@ def _connect_button(page: ft.Page, navigate) -> ft.Container:
         color=WHITE if connected else ORANGE,
         size=32,
     )
-
-    def on_click(e):
-        from services.connections import connect, disconnect
-
-        async def flow():
-            app_state.is_loading = True
-            navigate(e.page, "main")
-            e.page.update()
-
-            if not app_state.connected:
-                ok, err = await asyncio.to_thread(connect)
-            else:
-                ok, err = await asyncio.to_thread(disconnect)
-
-            app_state.is_loading = False
-            navigate(e.page, "main")
-            e.page.update()
-
-            if not ok:
-                from ui.auth_screen import show_error
-
-                show_error(e.page, str(err))
 
     return ft.Container(
         left=124,
@@ -336,7 +314,6 @@ def _title_texts() -> list[ft.Control]:
 
 # ─── Main screen ───
 def build_main_screen(page: ft.Page, navigate) -> ft.Container:
-    """Builds the main VPN screen."""
 
     def on_menu_click(e):
         navigate(e.page, "menu")
@@ -347,15 +324,84 @@ def build_main_screen(page: ft.Page, navigate) -> ft.Container:
     def go_to_servers(e):
         navigate(e.page, "servers")
 
+    # Overlay всегда в дереве, скрыт по умолчанию
+    overlay = _loading_overlay()
+    overlay.visible = False
+
+    def on_connect_click(e):
+        from services.connections import connect, disconnect
+
+        async def flow():
+            print("=== FLOW START ===")
+            print(f"current_server: {app_state.current_server}")
+
+            overlay.visible = True
+            page.update()
+
+            if not app_state.connected:
+                print("calling connect()...")
+                ok, err = await asyncio.to_thread(connect)
+            else:
+                print("calling disconnect()...")
+                ok, err = await asyncio.to_thread(disconnect)
+
+            print(f"result: ok={ok}, err={err}")
+
+            overlay.visible = False
+
+            if ok:
+                navigate(page, "main")
+            else:
+                page.update()
+                from ui.auth_screen import show_error
+
+                show_error(page, str(err))
+
+            print("=== FLOW END ===")
+
+        page.run_task(flow)
+
+    connected = app_state.connected
+    disabled = not app_state.current_server
+
+    connect_btn = ft.Container(
+        left=124,
+        top=400,
+        width=128,
+        height=128,
+        bgcolor=ORANGE if connected else WHITE,
+        border_radius=64,
+        shadow=ft.BoxShadow(
+            blur_radius=12,
+            color="#28000000",
+            offset=ft.Offset(0, 4),
+        ),
+        on_click=None if disabled else on_connect_click,
+        ink=not disabled,
+        opacity=0.5 if disabled else 1.0,
+        alignment=ft.Alignment.CENTER,
+        content=ft.Container(
+            width=103,
+            height=103,
+            border_radius=51.5,
+            border=ft.Border.all(1, ORANGE_RING if connected else DIVIDER),
+            alignment=ft.Alignment.CENTER,
+            content=ft.Icon(
+                ft.Icons.POWER_SETTINGS_NEW,
+                color=WHITE if connected else ORANGE,
+                size=32,
+            ),
+        ),
+    )
+
     controls: list[ft.Control] = [
         ft.Container(expand=True, bgcolor=BG, border_radius=24),
         *_top_bar(on_menu_click, on_connections_click),
         _info_card(),
         *_title_texts(),
-        _connect_button(page, navigate),
+        connect_btn,
         _bottom_bar(go_to_servers),
-        # Loading overlay — always last (renders on top)
-        *([_loading_overlay()] if app_state.is_loading else []),
+        overlay,
     ]
 
     return ft.Container(
