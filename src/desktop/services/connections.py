@@ -1,4 +1,5 @@
 import os
+from services.wireguard import is_connected as _wg_is_connected
 from config.app_state import app_state
 from config.config_builder import (
     save_device,
@@ -90,10 +91,16 @@ def connect():
         return False, resp.text
 
     # Start tunnel
+    if _wg_is_connected():
+        # Already up — nothing to do
+        app_state.connected = True
+        return True, None
+
+    # Start tunnel
     try:
         start_wg(config_path)
     except Exception as e:
-        disconnect_device(device_id)  # cleanup peer on node
+        disconnect_device(device_id)
         return False, f"Tunnel failed: {str(e)}"
 
     app_state.connected = True

@@ -1,5 +1,6 @@
 import flet as ft
 from config.app_state import W, H
+from services.wireguard import is_connected
 from services.auth_service import try_auto_login
 from ui.auth_screen import build_login_screen, build_register_screen
 from ui.main_screen import build_main_screen
@@ -38,6 +39,9 @@ def main_app(page: ft.Page):
     page.window.height = H
     page.window.frameless = True
     page.scroll = ft.ScrollMode.AUTO
+
+    # Sync real tunnel state on startup
+    app_state.connected = is_connected()
 
     if try_auto_login():
         navigate(page, "main")
