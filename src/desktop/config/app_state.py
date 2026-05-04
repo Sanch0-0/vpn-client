@@ -1,6 +1,7 @@
 class AppState:
     def __init__(self):
         self.connected = False
+        self.connected_at = None
         self.current_server = None
         self.servers = []
 

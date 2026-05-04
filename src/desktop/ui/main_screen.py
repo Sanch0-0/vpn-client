@@ -224,22 +224,20 @@ def build_main_screen(page: ft.Page, navigate) -> ft.Container:
 
     # ─── Background live update task ───
     _stop_tasks = {"stop": False}
-    _start_time: list[float] = []
 
     async def _live_update_loop():
         """Update upload/download stats and timer every second."""
         while not _stop_tasks["stop"]:
             if app_state.connected:
-                # Stats — run blocking psutil in thread
                 tx, rx = await asyncio.to_thread(_get_net_stats)
+
                 upload_text.value = tx
                 upload_text.color = BLACK
                 download_text.value = rx
                 download_text.color = BLACK
 
-                # Timer
-                if _start_time:
-                    elapsed = int(time.time() - _start_time[0])
+                if app_state.connected and app_state.connected_at:
+                    elapsed = int(time.time() - app_state.connected_at)
                     timer_text.value = _fmt_duration(elapsed)
 
                 try:
@@ -268,9 +266,6 @@ def build_main_screen(page: ft.Page, navigate) -> ft.Container:
                 print("calling connect()...")
                 ok, err = await asyncio.to_thread(connect)
 
-                if ok:
-                    _start_time.clear()
-                    _start_time.append(time.time())
             else:
                 print("calling disconnect()...")
                 _stop_tasks["stop"] = True
@@ -296,7 +291,6 @@ def build_main_screen(page: ft.Page, navigate) -> ft.Container:
 
     # Start live loop if already connected on screen build
     if connected:
-        _start_time.append(time.time())
         page.run_task(_start_live)
 
     controls: list[ft.Control] = [

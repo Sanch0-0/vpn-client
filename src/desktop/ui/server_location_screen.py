@@ -1,3 +1,4 @@
+import asyncio
 import flet as ft
 from config.app_state import W, H, app_state
 
@@ -228,6 +229,28 @@ def _premium_list(top_pos: int, navigate) -> ft.Container:
 
 # ─── Main screen ───
 def build_server_location_screen(page: ft.Page, navigate) -> ft.Container:
+
+    servers_column = ft.Column(
+        spacing=16,
+        controls=[ft.Text("Loading...", size=14, color=GRAY)],
+    )
+
+    async def load():
+        from services.connections import load_servers
+
+        ok = await asyncio.to_thread(load_servers)
+
+        if not ok:
+            servers_column.controls = [ft.Text("Failed to load servers", color="red")]
+        else:
+            servers_column.controls = [
+                _server_item(server, False, navigate) for server in app_state.servers
+            ]
+
+        page.update()
+
+    page.run_task(load)
+
     return ft.Container(
         expand=True,
         alignment=ft.Alignment.TOP_CENTER,
@@ -246,13 +269,7 @@ def build_server_location_screen(page: ft.Page, navigate) -> ft.Container:
                     ft.Container(
                         left=24,
                         top=184,
-                        content=ft.Column(
-                            spacing=16,
-                            controls=[
-                                _server_item(server, False, navigate)
-                                for server in app_state.servers
-                            ],
-                        ),
+                        content=servers_column,
                     ),
                     _section_title("PREMIUM LOCATIONS", 416),
                     _premium_list(448, navigate),

@@ -1,4 +1,5 @@
 import os
+from time import time
 from services.wireguard import is_connected as _wg_is_connected
 from config.app_state import app_state
 from config.config_builder import (
@@ -82,6 +83,8 @@ def connect():
             "device_id": device_id,
             "config_path": config_path,
             "node_ip": node_ip,
+            "connected_at": time(),
+            "server": app_state.current_server,
         }
     )
 
@@ -104,6 +107,8 @@ def connect():
         return False, f"Tunnel failed: {str(e)}"
 
     app_state.connected = True
+    app_state.connected_at = time()
+
     return True, None
 
 
@@ -126,4 +131,6 @@ def disconnect():
 
     clear_device()
     app_state.connected = False
+    app_state.connected_at = None
+
     return True, None

@@ -1,5 +1,6 @@
 import flet as ft
 from config.app_state import W, H
+from config.config_builder import load_device
 from services.wireguard import is_connected
 from services.auth_service import try_auto_login
 from ui.auth_screen import build_login_screen, build_register_screen
@@ -21,9 +22,6 @@ def navigate(page, route: str):
     elif route == "register":
         page.add(build_register_screen(page, navigate))
     elif route == "servers":
-        from services.connections import load_servers
-
-        load_servers()
         page.add(build_server_location_screen(page, navigate))
     elif route == "menu":
         from ui.menu_screen import build_menu_screen
@@ -40,8 +38,16 @@ def main_app(page: ft.Page):
     page.window.frameless = True
     page.scroll = ft.ScrollMode.AUTO
 
-    # Sync real tunnel state on startup
-    app_state.connected = is_connected()
+    device = load_device()
+
+    if device and is_connected():
+        app_state.connected = True
+        app_state.current_server = device.get("server")
+        app_state.connected_at = device.get("connected_at")
+    else:
+        app_state.connected = False
+        app_state.current_server = None
+        app_state.connected_at = None
 
     if try_auto_login():
         navigate(page, "main")
