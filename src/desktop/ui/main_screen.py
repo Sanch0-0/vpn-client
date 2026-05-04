@@ -2,7 +2,7 @@ import flet as ft
 import asyncio
 import psutil
 import time
-from config.app_state import app_state, W, H
+from desktop.config.app_state import app_state, W, H
 
 
 # ─── Colors ───
@@ -253,7 +253,7 @@ def build_main_screen(page: ft.Page, navigate) -> ft.Container:
 
     # ─── Connect/Disconnect handler ───
     def on_connect_click(e):
-        from services.connections import connect, disconnect
+        from desktop.services.connections import connect, disconnect
 
         async def flow():
             print("=== FLOW START ===")
@@ -279,7 +279,7 @@ def build_main_screen(page: ft.Page, navigate) -> ft.Container:
                 navigate(page, "main")
             else:
                 page.update()
-                from ui.auth_screen import show_error
+                from desktop.ui.auth_screen import show_error
 
                 show_error(page, str(err))
 

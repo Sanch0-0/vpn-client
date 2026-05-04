@@ -29,4 +29,6 @@ fi
 
 echo "✅ All dependencies OK"
 
+export PYTHONPATH=$(pwd)/src
 python src/desktop/main.py
+

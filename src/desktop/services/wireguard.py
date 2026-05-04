@@ -1,7 +1,7 @@
 import subprocess
 import os
 import time
-from config.config_builder import get_wg_config_path
+from desktop.config.config_builder import get_wg_config_path
 
 
 # -----------------

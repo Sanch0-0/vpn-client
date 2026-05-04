@@ -1,5 +1,5 @@
 import requests
-from config.app_state import app_state
+from desktop.config.app_state import app_state
 
 BASE_URL = "https://vpndesktop.lol/api/v1"
 
@@ -22,7 +22,7 @@ def request(method: str, path: str, **kwargs):
     )
 
     if resp.status_code == 401:
-        from services.auth_service import refresh_token
+        from desktop.services.auth_service import refresh_token
 
         if refresh_token():
             resp = requests.request(

@@ -1,12 +1,12 @@
-from services.api_client import (
+from desktop.services.api_client import (
     login as api_login,
     logout as api_logout,
     register as api_register,
 )
-from services.api_client import refresh as api_refresh
-from config.config_builder import save_session
-from config.app_state import app_state
-from config.config_builder import load_session, clear_session
+from desktop.services.api_client import refresh as api_refresh
+from desktop.config.config_builder import save_session
+from desktop.config.app_state import app_state
+from desktop.config.config_builder import load_session, clear_session
 
 
 def login_user(username: str, password: str):

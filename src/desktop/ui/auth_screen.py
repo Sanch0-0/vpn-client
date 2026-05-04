@@ -1,6 +1,6 @@
 import flet as ft
-from config.app_state import W, H
-from services.auth_service import login_user, register_user
+from desktop.config.app_state import W, H
+from desktop.services.auth_service import login_user, register_user
 import asyncio
 
 

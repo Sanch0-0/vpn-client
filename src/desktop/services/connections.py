@@ -1,22 +1,22 @@
 import os
 from time import time
-from services.wireguard import is_connected as _wg_is_connected
-from config.app_state import app_state
-from config.config_builder import (
+from desktop.services.wireguard import is_connected as _wg_is_connected
+from desktop.config.app_state import app_state
+from desktop.config.config_builder import (
     save_device,
     load_device,
     clear_device,
     get_machine_id,
     get_wg_config_path,
 )
-from services.wireguard import (
+from desktop.services.wireguard import (
     build_wg_config,
     generate_keys,
     save_wg_config,
     start_wg,
     stop_wg,
 )
-from services.api_client import (
+from desktop.services.api_client import (
     connect_device,
     disconnect_device,
     get_servers,

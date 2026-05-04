@@ -1,6 +1,6 @@
 import asyncio
 import flet as ft
-from config.app_state import W, H, app_state
+from desktop.config.app_state import W, H, app_state
 
 
 # ─── Colors ───
@@ -236,7 +236,7 @@ def build_server_location_screen(page: ft.Page, navigate) -> ft.Container:
     )
 
     async def load():
-        from services.connections import load_servers
+        from desktop.services.connections import load_servers
 
         ok = await asyncio.to_thread(load_servers)
 

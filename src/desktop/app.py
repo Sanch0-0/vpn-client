@@ -1,12 +1,12 @@
 import flet as ft
-from config.app_state import W, H
-from config.config_builder import load_device
-from services.wireguard import is_connected
-from services.auth_service import try_auto_login
-from ui.auth_screen import build_login_screen, build_register_screen
-from ui.main_screen import build_main_screen
-from ui.server_location_screen import build_server_location_screen
-from config.app_state import app_state
+from desktop.config.app_state import W, H
+from desktop.config.config_builder import load_device
+from desktop.services.wireguard import is_connected
+from desktop.services.auth_service import try_auto_login
+from desktop.ui.auth_screen import build_login_screen, build_register_screen
+from desktop.ui.main_screen import build_main_screen
+from desktop.ui.server_location_screen import build_server_location_screen
+from desktop.config.app_state import app_state
 
 
 def navigate(page, route: str):
@@ -24,7 +24,7 @@ def navigate(page, route: str):
     elif route == "servers":
         page.add(build_server_location_screen(page, navigate))
     elif route == "menu":
-        from ui.menu_screen import build_menu_screen
+        from desktop.ui.menu_screen import build_menu_screen
 
         page.add(build_menu_screen(page, navigate))
 

@@ -1,6 +1,6 @@
 import flet as ft
-from config.app_state import W, H
-from services.auth_service import logout_user
+from desktop.config.app_state import W, H
+from desktop.services.auth_service import logout_user
 
 
 # ─── Colors ───
@@ -222,7 +222,7 @@ def build_menu_screen(page: ft.Page, navigate) -> ft.Container:
 
         logout_user()
 
-        from ui.auth_screen import username_input, password_input
+        from desktop.ui.auth_screen import username_input, password_input
 
         username_input.value = ""
         password_input.value = ""
