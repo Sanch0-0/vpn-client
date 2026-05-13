@@ -24,7 +24,7 @@ from desktop.services.api_client import (
     create_device,
     get_device_config,
 )
-from src.desktop.ui.server_location_screen import REGION_MAP
+from desktop.ui.server_location_screen import REGION_MAP
 
 
 # --- HELPERS ---
@@ -61,6 +61,8 @@ def connect():
         # Auto-select best node
         profile = app_state.profile or "balanced"
         resp = get_best_node(profile)
+        print(f"get_best_node status: {resp.status_code}")
+        print(f"get_best_node body: {resp.text}")
         if resp.status_code != 200:
             return False, "Failed to find available server"
         best = resp.json()
