@@ -57,6 +57,10 @@ def get_servers():
     return request("GET", "/nodes/available")
 
 
+def get_best_node(profile: str = "balanced"):
+    return request("GET", f"/nodes/best?profile={profile}")
+
+
 # === DEVICES ===
 def create_device(data: dict):
     return request("POST", "/devices/create", json=data)

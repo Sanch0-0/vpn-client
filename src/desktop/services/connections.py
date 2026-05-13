@@ -19,10 +19,18 @@ from desktop.services.wireguard import (
 from desktop.services.api_client import (
     connect_device,
     disconnect_device,
+    get_best_node,
     get_servers,
     create_device,
     get_device_config,
 )
+from src.desktop.ui.server_location_screen import REGION_MAP
+
+
+# --- HELPERS ---
+def _region_to_flag(region: str) -> str:
+    _, _, flag = REGION_MAP.get(region.lower(), ("Unknown", "Unknown", "🌐"))
+    return flag
 
 
 # ─── SERVERS ───
@@ -38,13 +46,31 @@ def load_servers():
 
 # ─── CONNECT ───
 def connect():
-    if not app_state.current_server:
-        return False, "No server selected"
-
     existing = load_device()
     wg_path = get_wg_config_path()
-
     private_key, public_key = generate_keys()
+
+    # ─── Resolve server ───
+    server = app_state.current_server
+    node_id = None
+
+    if server:
+        # Explicit server selected by user
+        node_id = server["id"]
+    else:
+        # Auto-select best node
+        profile = app_state.profile or "balanced"
+        resp = get_best_node(profile)
+        if resp.status_code != 200:
+            return False, "Failed to find available server"
+        best = resp.json()
+        node_id = best["id"]
+        # Populate current_server so UI shows what was picked
+        app_state.current_server = {
+            "id": best["id"],
+            "name": best["name"],
+            "flag": _region_to_flag(best["region"]),
+        }
 
     # Reuse existing device record if present
     if existing and os.path.exists(wg_path):

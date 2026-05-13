@@ -3,6 +3,7 @@ class AppState:
         self.connected = False
         self.connected_at = None
         self.current_server = None
+        self.profile = "balanced"
         self.servers = []
 
         self.token = None

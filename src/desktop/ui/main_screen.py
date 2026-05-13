@@ -94,6 +94,10 @@ def build_main_screen(page: ft.Page, navigate) -> ft.Container:
     def go_to_servers(e):
         navigate(e.page, "servers")
 
+    def on_reset_server(e):
+        app_state.current_server = None
+        navigate(page, "main")
+
     # ─── Live stat controls (refs for in-place update) ───
     upload_text = ft.Text(
         value="0 KB/s", size=13, color=GRAY, weight=ft.FontWeight.W_600
@@ -301,7 +305,7 @@ def build_main_screen(page: ft.Page, navigate) -> ft.Container:
         subtitle_container,
         connect_btn,
         timer_container,
-        _bottom_bar(go_to_servers),
+        _bottom_bar(go_to_servers, on_reset_server),
         overlay,
     ]
 
@@ -373,11 +377,22 @@ def _top_bar(on_menu_click, on_connections_click) -> list[ft.Control]:
     return [menu_btn, connections_btn]
 
 
-def _bottom_bar(on_click) -> ft.Container:
-    """Bottom server selection bar."""
+def _bottom_bar(on_click, on_reset) -> ft.Container:
     server = app_state.current_server
     flag = server["flag"] if server else "🌐"
-    name = server["name"] if server else "Choose server"
+    name = server["name"] if server else "Auto"
+
+    trailing = (
+        ft.IconButton(
+            icon=ft.Icons.CLOSE,
+            icon_color=GRAY,
+            icon_size=16,
+            on_click=on_reset,
+            tooltip="Reset to auto",
+        )
+        if server
+        else ft.Icon(ft.Icons.KEYBOARD_ARROW_DOWN, color=GRAY)
+    )
 
     return ft.Container(
         left=24,
@@ -390,7 +405,7 @@ def _bottom_bar(on_click) -> ft.Container:
         alignment=ft.Alignment.CENTER,
         padding=ft.Padding.symmetric(horizontal=16),
         ink=True,
-        on_click=on_click,
+        on_click=on_click if not server else None,
         content=ft.Row(
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=8,
@@ -398,7 +413,7 @@ def _bottom_bar(on_click) -> ft.Container:
                 ft.Text(flag, size=20),
                 ft.Text(name, size=14, color=BLACK),
                 ft.Container(expand=True),
-                ft.Icon(ft.Icons.KEYBOARD_ARROW_DOWN, color=GRAY),
+                trailing,
             ],
         ),
     )
