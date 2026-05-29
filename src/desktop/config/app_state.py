@@ -16,5 +16,5 @@ class AppState:
         self.is_loading = False
 
 
-W, H = 375, 725
+W, H = 375, 710
 app_state = AppState()
