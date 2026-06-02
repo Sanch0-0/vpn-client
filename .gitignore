@@ -57,3 +57,8 @@ storage
 *.egg-info/
 **.egg-info/
 vpn-desktop.egg-info/
+
+dist/
+build/
+AppDir/
+VPN_Client-x86_64.AppImage
